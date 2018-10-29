@@ -1,12 +1,14 @@
-from flask import Flask, request
-from re import IGNORECASE, match, search
+from flask import abort, Flask, request
 from os import environ
+from re import IGNORECASE, search
 from requests import post
 
 app = Flask(__name__)
 
 @app.route('/', methods = ['POST'])
 def main():
+    if request.json.get('token') != environ['SLACK_VERIFICATION_TOKEN']:
+        abort(403)
     if request.json['type'] == 'url_verification':
         return request.json['challenge']
     if request.json['event']['type'] == 'message':
@@ -17,7 +19,7 @@ def main():
 
 def _message():
     try:
-        if match('bet$', request.json['event']['text'], IGNORECASE) or search(':bet:', request.json['event']['text'], IGNORECASE):
+        if search(r'\bbet\b', request.json['event']['text'], IGNORECASE):
             _react(request.json['event']['channel'], request.json['event']['ts'])
     except:
         pass
