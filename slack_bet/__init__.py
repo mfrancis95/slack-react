@@ -19,7 +19,7 @@ def main():
 
 def _message():
     try:
-        if search(r'\bbet\b', request.json['event']['text'], IGNORECASE):
+        if search(environ['REGEX'], request.json['event']['text'], IGNORECASE):
             _react(request.json['event']['channel'], request.json['event']['ts'])
     except:
         pass
@@ -27,12 +27,12 @@ def _message():
 def _react(channel, timestamp):
     arguments = {
         'channel': channel,
-        'name': 'bet',
+        'name': environ['REACTION'],
         'timestamp': timestamp,
         'token': environ['OAUTH_TOKEN']
     }
     post('https://slack.com/api/reactions.add', arguments)
 
 def _reaction():
-    if request.json['event']['reaction'] == 'bet':
+    if request.json['event']['reaction'] == environ['REACTION']:
         _react(request.json['event']['item']['channel'], request.json['event']['item']['ts'])
