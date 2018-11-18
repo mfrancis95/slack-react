@@ -1,7 +1,7 @@
-from flask import abort, Flask, request
+from flask import abort, Flask, jsonify, request
 from os import environ
-from re import IGNORECASE, search
-from requests import post
+from slack_bet.slack import get_channel, react
+from slack_bet.database import bet, get_top_bets
 
 app = Flask(__name__)
 
@@ -11,28 +11,15 @@ def main():
         abort(403)
     if request.json['type'] == 'url_verification':
         return request.json['challenge']
-    if request.json['event']['type'] == 'message':
-        _message()
-    elif request.json['event']['type'] == 'reaction_added':
-        _reaction()
+    if react() and request.json['event']['item']['channel'][0] == 'C':
+        bet(request.json['event']['item']['channel'], request.json['event']['item']['ts'])
     return ''
 
-def _message():
-    try:
-        if search(environ['REGEX'], request.json['event']['text'], IGNORECASE):
-            _react(request.json['event']['channel'], request.json['event']['ts'])
-    except:
-        pass
-
-def _react(channel, timestamp):
-    arguments = {
-        'channel': channel,
-        'name': environ['REACTION'],
-        'timestamp': timestamp,
-        'token': environ['OAUTH_TOKEN']
-    }
-    post('https://slack.com/api/reactions.add', arguments)
-
-def _reaction():
-    if request.json['event']['reaction'] == environ['REACTION']:
-        _react(request.json['event']['item']['channel'], request.json['event']['item']['ts'])
+@app.route('/' + environ['REACTION'], methods = ['POST'])
+def statistics():
+    if request.form.get('token') != environ['SLACK_VERIFICATION_TOKEN']:
+        abort(403)
+    text = f'Top # of :{environ["REACTION"]}:s today:\n'
+    for index, bets in enumerate(get_top_bets(), 1):
+        text += f'{index}. *#{get_channel(bets["_id"])}* - {bets["count"]}\n'
+    return jsonify({'response_type': 'in_channel', 'text': text})
