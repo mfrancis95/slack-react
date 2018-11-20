@@ -1,30 +1,30 @@
+from re import compile, I
 from os import environ
 from requests import get, post
-from re import IGNORECASE, search
 from flask import request
 
+_regex = compile(environ['REGEX'], I)
+
 def get_channel(channel):
-    arguments = {
+    return get('https://slack.com/api/channels.info', {
         'channel': channel,
         'token': environ['OAUTH_TOKEN']
-    }
-    return get('https://slack.com/api/channels.info', arguments).json()['channel']['name']
+    }).json()['channel']['name']
 
 def _message():
     try:
-        if search(environ['REGEX'], request.json['event']['text'], IGNORECASE):
+        if _regex.search(request.json['event']['text']):
             _react(request.json['event']['channel'], request.json['event']['ts'])
     except:
         pass
 
 def _react(channel, timestamp):
-    arguments = {
+    post('https://slack.com/api/reactions.add', {
         'channel': channel,
         'name': environ['REACTION'],
         'timestamp': timestamp,
         'token': environ['OAUTH_TOKEN']
-    }
-    post('https://slack.com/api/reactions.add', arguments)
+    })
 
 def react():
     if request.json['event']['type'] == 'message':
@@ -34,7 +34,7 @@ def react():
     return False
 
 def _reaction():
-    if request.json['event']['reaction'] == environ['REACTION']:
-        _react(request.json['event']['item']['channel'], request.json['event']['item']['ts'])
-        return True
-    return False
+    if request.json['event']['reaction'] != environ['REACTION']:
+        return False
+    _react(request.json['event']['item']['channel'], request.json['event']['item']['ts'])
+    return True

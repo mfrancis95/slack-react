@@ -7,15 +7,24 @@ try:
 except:
     _bets = MongoClient().bet.bets
 
-def bet(channel, timestamp):
+def insert_reaction(channel, timestamp):
     _bets.insert_one({'channel': channel, 'timestamp': datetime.utcfromtimestamp(float(timestamp))})
 
-def get_top_bets():
+def get_top_reactions(top):
     today = datetime.utcnow()
-    yesterday = today - timedelta(days = 1)
-    return _bets.aggregate([
-        {'$match': {'timestamp': {'$gt': yesterday, '$lte': today}}},
+    aggregation = [
         {'$group': {'_id': '$channel', 'count': {'$sum': 1}}},
         {'$sort': {'count': -1}},
         {'$limit': 5}
-    ])
+    ]
+    if top:
+        if top == 'month':
+            top = timedelta(days = 30)
+        elif top == 'week':
+            top = timedelta(weeks = 1)
+        elif top == 'year':
+            top = timedelta(days = 365)
+        else:
+            top = timedelta(days = 1)
+        aggregation = [{'$match': {'timestamp': {'$gt': today - top, '$lte': today}}}] + aggregation
+    return _bets.aggregate(aggregation)
