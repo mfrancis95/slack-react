@@ -8,13 +8,17 @@ except:
     _bets = MongoClient().bet.bets
 
 def insert_reaction(channel, timestamp):
-    _bets.insert_one({'channel': channel, 'timestamp': datetime.utcfromtimestamp(float(timestamp))})
+    _bets.insert_one({
+        'channel': channel,
+        'timestamp': datetime.utcfromtimestamp(float(timestamp))
+    })
 
 def get_top_reactions(top):
     today = datetime.utcnow()
     aggregation = [
         {'$group': {'_id': '$channel', 'count': {'$sum': 1}}},
-        {'$sort': {'count': -1}},
+        {'$group': {'_id': '$count', 'channels': {'$push': '$_id'}}},
+        {'$sort': {'_id': -1}},
         {'$limit': 5}
     ]
     if top:
@@ -26,5 +30,7 @@ def get_top_reactions(top):
             top = timedelta(days = 365)
         else:
             top = timedelta(days = 1)
-        aggregation = [{'$match': {'timestamp': {'$gt': today - top, '$lte': today}}}] + aggregation
+        aggregation = [
+            {'$match': {'timestamp': {'$gt': today - top, '$lte': today}}}
+        ] + aggregation
     return _bets.aggregate(aggregation)
