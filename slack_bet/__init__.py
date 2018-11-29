@@ -15,7 +15,7 @@ def main():
     if request.json['type'] == 'url_verification':
         return request.json['challenge']
     if react() and request.json['event']['item']['channel'][0] == 'C':
-        insert_reaction(request.json['event']['item']['channel'], request.json['event']['item']['ts'])
+        insert_reaction(request.json['event']['item']['channel'], request.json['event']['item_user'], request.json['event']['item']['ts'])
     return ''
 
 @app.route('/' + environ['REACTION'], methods = ['POST'])

@@ -7,9 +7,10 @@ try:
 except:
     _bets = MongoClient().bet.bets
 
-def insert_reaction(channel, timestamp):
+def insert_reaction(channel, user, timestamp):
     _bets.insert_one({
         'channel': channel,
+        'user': user,
         'timestamp': datetime.utcfromtimestamp(float(timestamp))
     })
 
