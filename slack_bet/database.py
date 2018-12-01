@@ -14,11 +14,11 @@ def insert_reaction(channel, user, timestamp):
         'timestamp': datetime.utcfromtimestamp(float(timestamp))
     })
 
-def get_top_reactions(top):
+def get_top_reactions(field, top):
     today = datetime.utcnow()
     aggregation = [
-        {'$group': {'_id': '$channel', 'count': {'$sum': 1}}},
-        {'$group': {'_id': '$count', 'channels': {'$push': '$_id'}}},
+        {'$group': {'_id': f'${field}', 'count': {'$sum': 1}}},
+        {'$group': {'_id': '$count', 'ids': {'$push': '$_id'}}},
         {'$sort': {'_id': -1}},
         {'$limit': 5}
     ]

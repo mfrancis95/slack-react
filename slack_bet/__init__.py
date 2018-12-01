@@ -1,10 +1,10 @@
-from slack_bet.slack import get_channel, react
+from slack_bet.slack import get_name, react
 from flask import abort, Flask, jsonify, request
 from os import environ
 from slack_bet.database import get_top_reactions, insert_reaction
 
-_get_channels = lambda channels : sorted(get_channel(channel) for channel in channels)
-_join_channels = lambda channels : ', '.join(f'*#{channel}*' for channel in _get_channels(channels))
+_get_names = lambda field, ids: sorted(get_name(field, id) for id in ids)
+_join_ids = lambda field, ids: ', '.join(f'*{name}*' for name in _get_names(field, ids))
 
 app = Flask(__name__)
 
@@ -18,22 +18,30 @@ def main():
         insert_reaction(request.json['event']['item']['channel'], request.json['event']['item_user'], request.json['event']['item']['ts'])
     return ''
 
-@app.route('/' + environ['REACTION'], methods = ['POST'])
+@app.route(f'/{environ["REACTION"]}', methods = ['POST'])
 def statistics():
     if request.form.get('token') != environ['SLACK_VERIFICATION_TOKEN']:
         abort(403)
-    top = request.form.get('text', '')
+    arguments = request.form.get('text', '').split(' ')
+    if not len(arguments) or arguments[0] not in ['channels', 'users']:
+        return jsonify(response_type = 'ephemeral', text = f'Usage: `/{environ["REACTION"]}` `channels|users` [`month|today|week|year`]')
+    field = arguments[0]
+    try:
+        top = arguments[1]
+    except:
+        top = ''
     if top == 'today':
         text = 'today'
     elif top == 'month':
-        text = 'of the month'
+        text = 'this month'
     elif top == 'week':
-        text = 'of the week'
+        text = 'this week'
     elif top == 'year':
-        text = 'of the year'
+        text = 'this year'
     else:
         text = 'of all-time'
-    text = f'Top # of :{environ["REACTION"]}:s {text}:\n'
-    for index, reactions in enumerate(get_top_reactions(top), 1):
-        text += f'{index}. {_join_channels(reactions["channels"])} - {reactions["_id"]}\n'
+    text = f'{field.capitalize()} with the most :{environ["REACTION"]}:s {text}:\n'
+    field = field[:-1]
+    for index, reactions in enumerate(get_top_reactions(field, top), 1):
+        text += f'{index}. {_join_ids(field, reactions["ids"])} - {reactions["_id"]}\n'
     return jsonify(response_type = 'in_channel', text = text)

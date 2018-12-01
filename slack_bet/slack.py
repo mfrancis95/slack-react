@@ -3,13 +3,20 @@ from os import environ
 from requests import get, post
 from flask import request
 
+get_name = lambda field, id: _get_channel(id) if field == 'channel' else _get_user_name(id)
 _regex = compile(environ['REGEX'], I)
 
-def get_channel(channel):
-    return get('https://slack.com/api/channels.info', {
+def _get_channel(channel):
+    return '#' + get('https://slack.com/api/channels.info', {
         'channel': channel,
         'token': environ['OAUTH_TOKEN']
     }).json()['channel']['name']
+
+def _get_user_name(user):
+    return get('https://slack.com/api/users.info', {
+        'token': environ['OAUTH_TOKEN'],
+        'user': user
+    }).json()['user']['profile']['display_name']
 
 def _message():
     try:
