@@ -1,7 +1,6 @@
 from re import compile, I
 from os import environ
 from requests import get, post
-from flask import request
 
 get_name = lambda field, id: _get_channel(id) if field == 'channel' else _get_user_name(id)
 _regex = compile(environ['REGEX'], I)
@@ -18,10 +17,10 @@ def _get_user_name(user):
         'user': user
     }).json()['user']['profile']['display_name']
 
-def _message():
+def _message(event):
     try:
-        if _regex.search(request.json['event']['text']):
-            _react(request.json['event']['channel'], request.json['event']['ts'])
+        if _regex.search(event['text']):
+            _react(event['channel'], event['ts'])
     except:
         pass
 
@@ -33,15 +32,15 @@ def _react(channel, timestamp):
         'token': environ['OAUTH_TOKEN']
     })
 
-def react():
-    if request.json['event']['type'] == 'message':
-        _message()
-    elif request.json['event']['type'] == 'reaction_added':
-        return _reaction()
+def react(event):
+    if event['type'] == 'message':
+        _message(event)
+    elif event['type'] == 'reaction_added':
+        return _reaction(event)
     return False
 
-def _reaction():
-    if request.json['event']['reaction'] != environ['REACTION']:
+def _reaction(event):
+    if event['reaction'] != environ['REACTION']:
         return False
-    _react(request.json['event']['item']['channel'], request.json['event']['item']['ts'])
+    _react(event['item']['channel'], event['item']['ts'])
     return True

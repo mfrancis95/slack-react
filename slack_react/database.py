@@ -3,12 +3,12 @@ from os import environ
 from datetime import datetime, timedelta
 
 try:
-    _bets = MongoClient(f'mongodb://{environ["MONGODB_USER"]}:{environ["MONGODB_PASSWORD"]}@{environ.get("MONGODB_HOST", "localhost")}/{environ["MONGODB_DATABASE"]}').bet.bets
+    _reactions = MongoClient(f'mongodb://{environ["MONGODB_USER"]}:{environ["MONGODB_PASSWORD"]}@{environ.get("MONGODB_HOST", "localhost")}/{environ["MONGODB_DATABASE"]}')[environ['MONGODB_DATABASE']].reactions
 except:
-    _bets = MongoClient().bet.bets
+    _reactions = MongoClient()[environ['MONGODB_DATABASE']].reactions
 
 def insert_reaction(channel, user, timestamp):
-    _bets.insert_one({
+    _reactions.insert_one({
         'channel': channel,
         'user': user,
         'timestamp': datetime.utcfromtimestamp(float(timestamp))
@@ -34,4 +34,4 @@ def get_top_reactions(field, top):
         aggregation = [
             {'$match': {'timestamp': {'$gt': today - top, '$lte': today}}}
         ] + aggregation
-    return _bets.aggregate(aggregation)
+    return _reactions.aggregate(aggregation)

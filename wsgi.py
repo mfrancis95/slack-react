@@ -1,4 +1,4 @@
-from slack_bet import app as application
+from slack_react import app as application
 
 if __name__ == '__main__':
     application.run()

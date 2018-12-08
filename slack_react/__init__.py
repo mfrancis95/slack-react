@@ -1,7 +1,7 @@
-from slack_bet.slack import get_name, react
+from slack_react.slack import get_name, react
 from flask import abort, Flask, jsonify, request
 from os import environ
-from slack_bet.database import get_top_reactions, insert_reaction
+from slack_react.database import get_top_reactions, insert_reaction
 
 _get_names = lambda field, ids: sorted(get_name(field, id) for id in ids)
 _join_ids = lambda field, ids: ', '.join(f'*{name}*' for name in _get_names(field, ids))
@@ -14,7 +14,7 @@ def main():
         abort(403)
     if request.json['type'] == 'url_verification':
         return request.json['challenge']
-    if react() and request.json['event']['item']['channel'][0] == 'C':
+    if react(request.json['event']) and request.json['event']['item']['channel'][0] == 'C' and 'item_user' in request.json['event']:
         insert_reaction(request.json['event']['item']['channel'], request.json['event']['item_user'], request.json['event']['item']['ts'])
     return ''
 
