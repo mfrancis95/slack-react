@@ -3,7 +3,10 @@ from os import environ
 from datetime import datetime, timedelta
 
 try:
-    _reactions = MongoClient(f'mongodb://{environ["MONGODB_USER"]}:{environ["MONGODB_PASSWORD"]}@{environ.get("MONGODB_HOST", "localhost")}/{environ["MONGODB_DATABASE"]}')[environ['MONGODB_DATABASE']].reactions
+    _reactions = MongoClient(
+        f'mongodb://{environ["MONGODB_USER"]}:{environ["MONGODB_PASSWORD"]}@{environ.get("MONGODB_HOST", "localhost")}/{environ["MONGODB_DATABASE"]}',
+        ssl = 'MONGODB_SSL' in environ
+    )[environ['MONGODB_DATABASE']].reactions
 except:
     _reactions = MongoClient()[environ['MONGODB_DATABASE']].reactions
 
