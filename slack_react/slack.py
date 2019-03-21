@@ -6,15 +6,13 @@ get_name = lambda field, id: _get_channel(id) if field == 'channel' else _get_us
 _regex = compile(environ['REGEX'], I)
 
 def _get_channel(channel):
-    return '#' + get('https://slack.com/api/channels.info', {
-        'channel': channel,
-        'token': environ['OAUTH_TOKEN']
-    }).json()['channel']['name']
+    return f'<#{channel}|' + get('https://slack.com/api/channels.info', {
+        'channel': channel, 'token': environ['OAUTH_TOKEN']
+    }).json()['channel']['name'] + '>'
 
 def _get_user_name(user):
     return get('https://slack.com/api/users.info', {
-        'token': environ['OAUTH_TOKEN'],
-        'user': user
+        'token': environ['OAUTH_TOKEN'], 'user': user
     }).json()['user']['profile']['display_name']
 
 def _message(event):
@@ -26,9 +24,7 @@ def _message(event):
 
 def _react(channel, timestamp):
     post('https://slack.com/api/reactions.add', {
-        'channel': channel,
-        'name': environ['REACTION'],
-        'timestamp': timestamp,
+        'channel': channel, 'name': environ['REACTION'], 'timestamp': timestamp,
         'token': environ['OAUTH_TOKEN']
     })
 

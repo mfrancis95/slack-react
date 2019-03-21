@@ -12,8 +12,7 @@ except:
 
 def insert_reaction(channel, user, timestamp):
     _reactions.insert_one({
-        'channel': channel,
-        'user': user,
+        'channel': channel, 'user': user,
         'timestamp': datetime.utcfromtimestamp(float(timestamp))
     })
 
@@ -22,8 +21,7 @@ def get_top_reactions(field, top):
     aggregation = [
         {'$group': {'_id': f'${field}', 'count': {'$sum': 1}}},
         {'$group': {'_id': '$count', 'ids': {'$push': '$_id'}}},
-        {'$sort': {'_id': -1}},
-        {'$limit': 5}
+        {'$sort': {'_id': -1}}, {'$limit': 5}
     ]
     if top:
         if top == 'month':
