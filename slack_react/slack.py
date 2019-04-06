@@ -2,7 +2,7 @@ from re import compile, I
 from os import environ
 from requests import get, post
 
-get_name = lambda field, id: _get_channel(id) if field == 'channel' else _get_user_name(id)
+get_name = lambda field, id: _get_channel(id) if field == 'channels' else _get_user_name(id)
 _regex = compile(environ['REGEX'], I)
 
 def _get_channel(channel):
